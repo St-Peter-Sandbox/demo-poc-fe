@@ -1,12 +1,9 @@
 node_modules
 dist
-build
-.next
 coverage
+.git
+test-results
+playwright-report
 .env
 .env.*
 !.env.example
-.git
-.github
-*.log
-npm-debug.log*
