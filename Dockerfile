@@ -1,15 +1,12 @@
-FROM node:22.22.2-alpine3.23 AS builder
+FROM node:24-alpine AS build
 WORKDIR /app
 COPY package*.json ./
-RUN if [ -f package-lock.json ]; then npm ci; else npm install --before="$(node -p 'new Date(Date.now() - 864e5).toISOString()')"; fi
+RUN npm ci --ignore-scripts
 COPY . .
+ARG VITE_API_BASE_URL=""
+ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
 RUN npm run build
-
-FROM nginxinc/nginx-unprivileged:1.29.4-alpine3.23 AS runner
-USER root
-RUN apk upgrade --no-cache
-USER 101
+FROM nginxinc/nginx-unprivileged:alpine
 COPY nginx.conf /etc/nginx/conf.d/default.conf
-COPY --from=builder /app/dist /usr/share/nginx/html
+COPY --from=build /app/dist /usr/share/nginx/html
 EXPOSE 8080
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 CMD wget -q -O /dev/null http://127.0.0.1:8080/ || exit 1
